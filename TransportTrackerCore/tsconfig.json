@@ -4,11 +4,17 @@
     "module": "es2015",
     "moduleResolution": "node",
     "target": "es5",
-    "jsx": "react",
+    "jsx": "react", 
+    "noImplicitAny": false,
     "sourceMap": true,
     "skipDefaultLibCheck": true,
-    "strict": true,
-    "types": ["webpack-env"]
+    "strict": false,
+    "types": [ "webpack-env" ],
+    "experimentalDecorators": true,
+    "lib": [
+      "es2015",
+      "dom"
+    ]
   },
   "exclude": [
       "bin",

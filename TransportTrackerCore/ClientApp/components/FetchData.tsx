@@ -6,9 +6,10 @@ interface FetchDataExampleState {
     forecasts: WeatherForecast[];
     loading: boolean;
 }
-
+  
 export class FetchData extends React.Component<RouteComponentProps<{}>, FetchDataExampleState> {
     constructor() {
+        
         super();
         this.state = { forecasts: [], loading: true };
 
