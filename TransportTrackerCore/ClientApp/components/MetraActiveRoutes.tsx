@@ -5,6 +5,7 @@ import 'isomorphic-fetch';
 interface FetchDataRouteState {
     routes: RoutesData[];
     loading: boolean;
+    currentDateTime: string;
 }
 
 
@@ -18,20 +19,19 @@ interface RoutesData {
     arrivalTime: string;
     tripURL: string;
     arrivesIn: string;
-} 
+}
 
-export class MetraSchedule extends React.Component<RouteComponentProps<{}>, FetchDataRouteState> {
+export class MetraActiveRoutes extends React.Component<RouteComponentProps<{}>, FetchDataRouteState> {
 
     constructor() {
         super();
-         
-        this.state = { routes: [], loading: true }; 
+
+        this.state = { routes: [], loading: true, currentDateTime: '' };
 
         this.loadData();
     }
-     
-    componentDidMount()
-    {
+
+    componentDidMount() {
         setInterval(() => {
             this.loadData();
         }, 30000)
@@ -39,17 +39,15 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.loadData();
         //setInterval(this.loadData, 30000);
     }
-     
-    loadData()
-    {
-        try
-        { 
+
+    loadData() {
+        try {
             fetch('api/Metra/GetRoutesData')
                 .then(response => response.json() as Promise<RoutesData[]>)
                 .then(data => {
-                    this.setState({ routes: data, loading: false });
+                    this.setState({ routes: data, loading: false, currentDateTime: 'Updated: ' + new Date().toLocaleString() });
                 });
-             
+
         } catch (e) {
             //console.log(e);
         }
@@ -59,11 +57,11 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         //console.debug(this.state.routes);
         let contents = this.state.loading
             ? <p><em>Loading...</em></p>
-            : MetraSchedule.renderForecastsTable(this.state.routes);
+            : MetraActiveRoutes.renderForecastsTable(this.state.routes);
 
         return <div>
             <h1>Metra Active Routes</h1>
-            <p>Fetching data from the server.</p>
+            <p>{this.state.currentDateTime}</p>
             {contents}
         </div>;
     }
@@ -84,10 +82,10 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                     //<tr key={index}>
                     <tr key={route.locationID}>
                         <td>{route.arrivesIn}</td>
-                        <td>{route.arrivalTime}</td> 
+                        <td>{route.arrivalTime}</td>
                         <td>{route.description}</td>
                         <td>{route.tripID}</td>
-                        <td>{route.tripURL}</td> 
+                        <td>{route.tripURL}</td>
                     </tr>
                 )}
             </tbody>
