@@ -5,6 +5,12 @@ using System.Web;
 
 namespace TransportTrackerCore.Models
 {
+    public enum Direction
+    {
+        Outbound = 0,
+        Inbound = 1
+    }
+
     public class AuxModels
     { 
         public class StopOnTrip
