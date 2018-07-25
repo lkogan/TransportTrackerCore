@@ -18,6 +18,9 @@ namespace TransportTrackerCore.Controllers
 
             IEnumerable<RoutesData> routes = _model.GetRoutesOnTheWayToWesternAvenue();
 
+            ServicePeriodModels _sdm = new ServicePeriodModels();
+            string serviceID = _sdm.GetServicePeriod();
+
             return routes;
         } 
     }

@@ -16,7 +16,7 @@ namespace TransportTrackerCore.Models
         {
             string userName = "ddbb87512b3fc392b58a69c485ff8ce8";
             string password = "91b0f62e8049d0d51b35f27a494e5b46";
-            string encoded = System.Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1").GetBytes(userName + ":" + password));
+            string encoded = Convert.ToBase64String(Encoding.GetEncoding("ISO-8859-1").GetBytes(userName + ":" + password));
 
             CredentialCache credentialCache = new CredentialCache();
             credentialCache.Add(
