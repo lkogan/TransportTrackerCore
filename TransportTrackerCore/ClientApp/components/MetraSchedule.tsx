@@ -2,25 +2,27 @@
 import { RouteComponentProps } from 'react-router';
 import 'isomorphic-fetch';
 
-interface FetchDataRouteState {
-    routes: RoutesData[];
+interface FetchDataScheduleState {
+    routes: StopOnTrip[];
     loading: boolean;
 }
 
 
-interface RoutesData {
-    locationID: number;
-    tripID: string;
-    lat: string;
-    long: string;
-    description: string;
-    imagePath: string;
-    arrivalTime: string;
-    tripURL: string;
-    arrivesIn: string;
+interface StopOnTrip {
+    trip_id: string;
+    arrival_time: string;
+    departure_time: string;
+    stop_id: string;
+    stop_sequence: number;
+    pickup_type: number;
+    drop_off_type: number;
+    center_boarding: number;
+    south_boarding: number;
+    bikes_allowed: number;
+    notice: number;
 } 
 
-export class MetraSchedule extends React.Component<RouteComponentProps<{}>, FetchDataRouteState> {
+export class MetraSchedule extends React.Component<RouteComponentProps<{}>, FetchDataScheduleState> {
 
     constructor() {
         super();
@@ -44,8 +46,8 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     {
         try
         { 
-            fetch('api/Metra/GetRoutesData')
-                .then(response => response.json() as Promise<RoutesData[]>)
+            fetch('api/Metra/GetScheduleData')
+                .then(response => response.json() as Promise<StopOnTrip[]>)
                 .then(data => {
                     this.setState({ routes: data, loading: false });
                 });
@@ -68,26 +70,21 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         </div>;
     }
 
-    private static renderForecastsTable(routes: RoutesData[]) {
+    private static renderForecastsTable(routes: StopOnTrip[]) {
         return <table className='table'>
             <thead>
                 <tr>
-                    <th>ArrivesIn</th>
+                    <th>DepartingFrom</th>
                     <th>ArrivalTime</th>
-                    <th>Description</th>
                     <th>TripID</th>
-                    <th>TripURL</th>
                 </tr>
             </thead>
             <tbody>
-                {routes.map((route, index) =>
-                    //<tr key={index}>
-                    <tr key={route.locationID}>
-                        <td>{route.arrivesIn}</td>
-                        <td>{route.arrivalTime}</td> 
-                        <td>{route.description}</td>
-                        <td>{route.tripID}</td>
-                        <td>{route.tripURL}</td> 
+                {routes.map((route, index) => 
+                    <tr key={route.trip_id}>
+                        <td>{route.stop_id}</td>
+                        <td>{route.arrival_time}</td>
+                        <td>{route.trip_id}</td>
                     </tr>
                 )}
             </tbody>
