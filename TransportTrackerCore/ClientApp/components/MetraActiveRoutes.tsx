@@ -37,7 +37,6 @@ export class MetraActiveRoutes extends React.Component<RouteComponentProps<{}>, 
         }, 30000)
 
         this.loadData();
-        //setInterval(this.loadData, 30000);
     }
 
     loadData() {

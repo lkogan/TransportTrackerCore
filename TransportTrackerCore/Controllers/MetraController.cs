@@ -35,6 +35,8 @@ namespace TransportTrackerCore.Controllers
 
             IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes("CUS", Direction.Outbound, lstRoutesFilter);
 
+
+
             //var trips1 = _tm.GetScheduledTimes("WESTERNAVE", Direction.Inbound, lstRoutesFilter);
 
             return schedules;
