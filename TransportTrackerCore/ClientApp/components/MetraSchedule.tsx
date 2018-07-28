@@ -13,11 +13,17 @@ import Select from 'react-select';
 
 interface FetchDataScheduleState {
     routes: StopOnTrip[];
+    stations: StationObject[];
     loading: boolean;
     currentDateTime: string;
     selectedOption: string;
 }
 
+interface StationObject
+{
+    value: string;
+    label: string;
+}
 
 interface StopOnTrip {
     trip_id: string;
@@ -32,7 +38,7 @@ interface StopOnTrip {
     bikes_allowed: number;
     notice: number;
 } 
- 
+  
 
 const options = [
     { value: 'WESTERNAVE', label: 'Western Avenue' },
@@ -49,8 +55,9 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     constructor() {
         super();
          
-        this.state = { routes: [], loading: true, currentDateTime: '', selectedOption: null}; 
+        this.state = { routes: [], stations:[], loading: true, currentDateTime: '', selectedOption: null}; 
 
+        this.loadStations();
         this.loadData();
     }
      
@@ -62,7 +69,21 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
 
         this.loadData();
     }
-     
+
+    loadStations()
+    {
+        try {
+            fetch('api/Metra/GetStations')
+                .then(response => response.json() as Promise<StationObject[]>)
+                .then(data => {
+                    this.setState({ stations: data });
+                });
+
+        } catch (e) {
+            //console.log(e);
+        }
+    }
+
     loadData()
     {
         try
@@ -102,10 +123,8 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             </p>
             <p>
                 <Label>From: </Label>
-                <Select
-                    value={selectedOption}
-                    onChange={this.handleChange}
-                    options={options}
+                <Select  
+                    options={this.state.stations}
                 />
             </p>
             <p>
