@@ -27,19 +27,9 @@ namespace TransportTrackerCore.Controllers
         [HttpGet("GetScheduleData")]
         public IEnumerable<StopOnTrip> GetScheduleData()
         {
-            //Filter positions to contain only routes that stop at Western Avenue
-            List<string> lstRoutesFilter = new List<string>();
-            lstRoutesFilter.Add("MD-N");
-            lstRoutesFilter.Add("MD-W");
-            lstRoutesFilter.Add("NCS");
-             
             TripModels _tm = new TripModels();
-
-            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes("CUS", Direction.Outbound, lstRoutesFilter);
-
-
-
-            //var trips1 = _tm.GetScheduledTimes("WESTERNAVE", Direction.Inbound, lstRoutesFilter);
+            
+            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes("WESTERNAVE", "CUS", Direction.Inbound);
 
             return schedules;
         }
@@ -58,6 +48,11 @@ namespace TransportTrackerCore.Controllers
 
             foreach (Station s in stationsList)
             {
+                if (s.stop_name.Equals("Western Ave"))
+                {
+                    s.stop_name = "Western Ave/18th Place (BNSF)";
+                }
+
                 lst.Add(new StationObject { value = s.stop_id, label = s.stop_name });
             }
             return lst;
@@ -69,5 +64,34 @@ namespace TransportTrackerCore.Controllers
     {
         public string value { get; set; }
         public string label { get; set; }
+    }
+
+    public class TrainArrival
+    {
+        public string origin_departure_time { get; set; }
+        public string origin_name { get; set; }
+        public string dest_arrival_time { get; set; }
+        public string arrives_in_min { get; set; }
+        public string dest_name { get; set; }
+        public string description { get; set; }
+
+
+
+
+
+
+        //public string route_id { get; set; }
+        //public string service_id { get; set; }
+        //public string trip_id { get; set; }
+        //public string trip_headsign { get; set; }
+        
+        //public int direction_id { get; set; }
+
+
+
+        //public string trip_id { get; set; }
+        //public string arrival_time { get; set; }
+        //public string departure_time { get; set; }
+        //public string stop_id { get; set; } 
     }
 }
