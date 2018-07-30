@@ -16,7 +16,8 @@ interface FetchDataScheduleState {
     stations: StationObject[];
     loading: boolean;
     currentDateTime: string;
-    selectedOption: string;
+    fromStationSelected: string;
+    toStationSelected: string;
 }
 
 interface StationObject
@@ -55,7 +56,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     constructor() {
         super();
          
-        this.state = { routes: [], stations:[], loading: true, currentDateTime: '', selectedOption: null}; 
+        this.state = { routes: [], stations: [], loading: true, currentDateTime: '', fromStationSelected: null, toStationSelected: null}; 
 
         this.loadStations();
         this.loadData();
@@ -99,14 +100,21 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         }
     }
  
-    handleChange = (selectedOption) => {
-        this.setState({ selectedOption });
-        console.log(`Option selected:`, selectedOption);
+    toStation_OnSelected = (toStationSelected) => {
+        this.setState({ toStationSelected });
+        console.log(`Option selected:`, toStationSelected);
+    }
+
+    fromStation_OnSelected = (fromStationSelected) => {
+        this.setState({ fromStationSelected });
+        console.log(`Option selected:`, fromStationSelected);
     }
 
     public render() {
 
-        const { selectedOption } = this.state;
+        const { fromStationSelected } = this.state;
+        const { toStationSelected } = this.state;
+
         //console.debug(this.state.routes);
         let contents = this.state.loading
             ? <p><em>Loading...</em></p>
@@ -124,14 +132,16 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             <p>
                 <Label>From: </Label>
                 <Select  
+                    value={fromStationSelected}
                     options={this.state.stations}
+                    onChange={this.fromStation_OnSelected}
                 />
             </p>
             <p>
                 <Label>To: </Label>
                 <Select
-                    value={selectedOption}
-                    onChange={this.handleChange}
+                    value={toStationSelected}
+                    onChange={this.toStation_OnSelected}
                     options={options}
                 />
             </p>

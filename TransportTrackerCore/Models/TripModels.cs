@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using static TransportTrackerCore.Models.AlertModels;
 using static TransportTrackerCore.Models.AuxModels;
 using j = TransportTrackerCore.Models.JSON_Models;
+using h = TransportTrackerCore.Models.HelperModels;
 
 namespace TransportTrackerCore.Models
 {
@@ -92,17 +93,8 @@ namespace TransportTrackerCore.Models
             var toStationList = stopsList.Where(x => x.stop_id.Equals(ToStationID));
 
             var matches = fromStationList.Select(a => a.trip_id).Intersect(toStationList.Select(b => b.trip_id)).ToList();
-
-            List<string> routes = new List<string>();
-            foreach (var x in matches)
-            {
-                string route = x.Substring(0, x.IndexOf('_'));
-
-                if (!routes.Contains(route))
-                {
-                    routes.Add(route);
-                }
-            }
+             
+            List<string> routes = h.GetLinesFromStationList(matches);
 
 
 
