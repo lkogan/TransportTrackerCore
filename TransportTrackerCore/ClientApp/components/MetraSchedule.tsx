@@ -57,18 +57,32 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         super();
          
         this.state = { routes: [], stations: [], loading: true, currentDateTime: '', fromStationSelected: null, toStationSelected: null}; 
+          
+        //this.loadData();
 
-        this.loadStations();
-        this.loadData();
+        
+
+        //this.loadStations();
     }
-     
+
+    componentWillMount()
+    { 
+        
+    }
+
     componentDidMount()
     {
+        //fetch('api/Metra/LoadInitialData');
+
+        this.loadStations();
+
+        //Repeat loading every 30 seconds
         setInterval(() => {
             this.loadData();
-        }, 30000)
+        }, 30000);
 
-        this.loadData();
+        
+        //this.loadData();
     }
 
     loadStations()
@@ -88,7 +102,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     loadData()
     {
         try
-        { 
+        {  
             fetch('api/Metra/GetScheduleData')
                 .then(response => response.json() as Promise<StopOnTrip[]>)
                 .then(data => {
@@ -99,16 +113,22 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             //console.log(e);
         }
     }
- 
+     
+    fromStation_OnSelected = (fromStationSelected) => {
+        this.setState({ fromStationSelected });
+         
+        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=1', {
+        })
+
+
+        console.log(`Option selected:`, fromStationSelected);
+    }
+
     toStation_OnSelected = (toStationSelected) => {
         this.setState({ toStationSelected });
         console.log(`Option selected:`, toStationSelected);
     }
 
-    fromStation_OnSelected = (fromStationSelected) => {
-        this.setState({ fromStationSelected });
-        console.log(`Option selected:`, fromStationSelected);
-    }
 
     public render() {
 
@@ -161,7 +181,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                     </thead>
                     <tbody>
                         {routes.map((route, index) => 
-                            <tr key={route.trip_id}>
+                            <tr key={index}>
                                 <td>{route.stop_id}</td>
                                 <td>{route.arrival_time}</td>
                                 <td>{route.trip_id}</td>

@@ -14,7 +14,13 @@ namespace TransportTrackerCore.Controllers
 {
     [Route("api/[controller]")]
     public class MetraController : Controller
-    { 
+    {
+        [HttpGet("LoadInitialData")]
+        public void LoadInitialData()
+        {
+            HelperModels.LoadInitialData();
+        }
+
         [HttpGet("GetRoutesData")]
         public IEnumerable<RoutesData> GetRoutesData()
         {  
@@ -38,10 +44,19 @@ namespace TransportTrackerCore.Controllers
 
         [HttpGet("GetStations")]
         public IEnumerable<StationObject> GetStations()
-        { 
-            List<StationObject> lst = HelperModels.GetStations();
-             
+        {
+            IEnumerable<StationObject> lst = (StationsList == null) ? GetStations() : StationsList;
+
             return lst;
         }
-    } 
+
+        [HttpGet("GetAccessibleStations")]
+        public IEnumerable<StationObject> GetAccessibleStations(string StationAbbrev, int Direction)
+        {
+            List<StationObject> lst = HelperModels.GetLinesFromStation(StationAbbrev, Direction);
+
+            return lst;
+        }
+
+    }
 }

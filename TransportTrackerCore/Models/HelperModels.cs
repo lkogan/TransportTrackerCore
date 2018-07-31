@@ -10,8 +10,60 @@ namespace TransportTrackerCore.Models
 {
     public class HelperModels
     {
+        public static List<ServicePeriod> ServicePeriodList;
+
+        public static List<StopOnTrip> StopList;
+
+        public static List<StationObject> StationsList;
+
+        public static List<Trip> TripsList;
+
+
+        public static void LoadInitialData()
+        { 
+            ServicePeriodList = GetServicePeriod();
+             
+            StopList = GetStopTimes();
+
+            StationsList = GetStations();
+
+            TripsList = GetTrips();
+        }
+
+        public static List<ServicePeriod> GetServicePeriod()
+        {
+            if (ServicePeriodList != null) return ServicePeriodList;
+
+            string servicePeriodJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/calendar");
+            ServicePeriodList = JsonConvert.DeserializeObject<List<ServicePeriod>>(servicePeriodJSON);
+
+            return ServicePeriodList;
+        }
+
+        public static List<StopOnTrip> GetStopTimes()
+        {
+            if (StopList != null) return StopList;
+
+            string stopTimesJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stop_times");
+            StopList = JsonConvert.DeserializeObject<List<StopOnTrip>>(stopTimesJSON);
+
+            return StopList;
+        }
+
+        public static List<Trip> GetTrips()
+        {
+            if (TripsList != null) return TripsList;
+
+            string tripsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/trips");
+            TripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
+
+            return TripsList;
+        }
+
         public static List<StationObject> GetStations()
         {
+            if (StationsList != null) return StationsList;
+
             //Create dictionary to resolve station abbrevs to names
             string stationsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stops");
             List<Station> stationsList = JsonConvert.DeserializeObject<List<Station>>(stationsJSON);
@@ -29,6 +81,9 @@ namespace TransportTrackerCore.Models
 
                 lst.Add(new StationObject { value = s.stop_id, label = s.stop_name });
             }
+
+            StationsList = lst;
+
             return lst;
         }
 
@@ -49,9 +104,16 @@ namespace TransportTrackerCore.Models
             return routes;
         }
 
-        public void GetLinesFromStation(string StationAbbrev, Direction direction)
+        public static List<StationObject> GetLinesFromStation(string StationAbbrev, int direction)
         {
+            List<StationObject> lst = (StationsList == null) ? GetStations() : StationsList;
+
             //Get full list from https://gtfsapi.metrarail.com/gtfs/schedule/stop_times, get trip_id's as list
+
+            string tripsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/trips");
+            List<Trip> tripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
+
+
             // 
             //Go to trips at https://gtfsapi.metrarail.com/gtfs/schedule/trips
 
@@ -65,6 +127,8 @@ namespace TransportTrackerCore.Models
             //// trip_Id's not from list of params
             //// Stop_sequence greater, or less (depends on direction)
             //// Return list of stations
+
+            return lst;
         }
 
         public class StationObject

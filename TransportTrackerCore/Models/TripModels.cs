@@ -95,11 +95,7 @@ namespace TransportTrackerCore.Models
             var matches = fromStationList.Select(a => a.trip_id).Intersect(toStationList.Select(b => b.trip_id)).ToList();
              
             List<string> routes = h.GetLinesFromStationList(matches);
-
-
-
-
-
+             
             //Get Metra routes that are running today, in the direction specified
             //direction ID = 0: inbound; 1: outbound
             string serviceID = GetServicePeriod();
