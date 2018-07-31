@@ -106,21 +106,48 @@ namespace TransportTrackerCore.Models
 
         public static List<StationObject> GetLinesFromStation(string StationAbbrev, int direction)
         {
-            List<StationObject> lst = (StationsList == null) ? GetStations() : StationsList;
+            List<StationObject> filteredStations = (StationsList == null) ? GetStations() : StationsList;
 
-            //Get full list from https://gtfsapi.metrarail.com/gtfs/schedule/stop_times, get trip_id's as list
+            List<Trip> filteredTrips = (TripsList == null) ? GetTrips() : TripsList;
 
-            string tripsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/trips");
-            List<Trip> tripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
+            List<ServicePeriod> filteredServicePeriods = (ServicePeriodList == null) ? GetServicePeriod() : ServicePeriodList;
+             
+            List<StopOnTrip> filteredStopsOnTrips = (StopList == null) ? GetStopTimes() : StopList; //slow (110K entries!). 
+
+            var filteredStopsOnTrips1 = filteredStopsOnTrips.Where(x => x.stop_id.Equals(StationAbbrev)).ToList();
 
 
-            // 
-            //Go to trips at https://gtfsapi.metrarail.com/gtfs/schedule/trips
+            var routes = GetLinesFromStationList(filteredStopsOnTrips1.Select(x => x.trip_id).ToList());
 
+
+
+
+            string serviceID = TripModels.GetServicePeriod();
+              
             //Filter out:
             //// Service ID out of range
             //// Direction out of range
             //// Return List of Route_id's and trip'id's
+            filteredTrips = filteredTrips
+                .Where(
+                (x) =>
+                (x.service_id.Equals(serviceID))
+                && (x.direction_id.Equals((int)direction))
+                && (routes.Any(b => x.route_id.Equals(b)))
+                ).ToList();
+
+            var filteredTripIDs = filteredTrips.Select(x => x.trip_id).ToList();
+
+            var filteredStopsOnTrips2 = filteredStopsOnTrips
+                .Where(
+                (x) =>
+                (filteredTripIDs.Any(b => x.trip_id.Equals(b))));
+
+            //Remaining:
+            //1) Filter out stop_sequence greater than source station (for inbounds), or less than (for outbounds).
+            //Keep in mind that stop_sequence will be different on each line
+
+            //2) Get stations remaining, exclude origin station
 
             //Go back to stop_time list
             //// Filter out:
@@ -128,7 +155,9 @@ namespace TransportTrackerCore.Models
             //// Stop_sequence greater, or less (depends on direction)
             //// Return list of stations
 
-            return lst;
+
+
+            return filteredStations;
         }
 
         public class StationObject

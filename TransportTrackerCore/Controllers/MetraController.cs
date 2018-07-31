@@ -45,7 +45,7 @@ namespace TransportTrackerCore.Controllers
         [HttpGet("GetStations")]
         public IEnumerable<StationObject> GetStations()
         {
-            IEnumerable<StationObject> lst = (StationsList == null) ? GetStations() : StationsList;
+            IEnumerable<StationObject> lst = (StationsList == null) ? HelperModels.GetStations() : StationsList;
 
             return lst;
         }

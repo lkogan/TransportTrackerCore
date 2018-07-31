@@ -58,7 +58,7 @@ namespace TransportTrackerCore.Models
 
     public class TripModels
     {
-        public string GetServicePeriod()
+        public static string GetServicePeriod()
         {
             string serviceID = string.Empty;
 
