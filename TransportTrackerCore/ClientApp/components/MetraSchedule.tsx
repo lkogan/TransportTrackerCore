@@ -19,6 +19,7 @@ interface FetchDataScheduleState {
     currentDateTime: string;
     fromStationSelected: string;
     toStationSelected: string;
+    directionSelected: string;
 }
 
 interface StationObject
@@ -41,13 +42,7 @@ interface StopOnTrip {
     notice: number;
 } 
   
-
-const options = [
-    { value: 'WESTERNAVE', label: 'Western Avenue' },
-    { value: 'HEALY', label: 'Healy' },
-    { value: 'GRAYLAND', label: 'Grayland' }
-];
-
+ 
 var divStyle = { 
     margin: "20px" 
 };
@@ -60,7 +55,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.state = {
             routes: [], stations: [], accessibleStations: [],
             loading: true, currentDateTime: '',
-            fromStationSelected: null, toStationSelected: null
+            fromStationSelected: null, toStationSelected: null, directionSelected: '1'
         }; 
           
         //this.loadData();
@@ -122,7 +117,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     fromStation_OnSelected = (fromStationSelected) => {
         this.setState({ fromStationSelected });
          
-        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=1', {
+        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=' + this.state.directionSelected, {
         })
         .then(response => response.json() as Promise<StationObject[]>)
         .then(data => {
@@ -138,35 +133,41 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         console.log(`Option selected:`, toStationSelected);
     }
 
+    direction_OnChanged = (directionSelected) => {
+        this.setState({ directionSelected }); 
+        console.log('Changed direction:' + directionSelected);
+    }
 
     public render() {
 
         const { fromStationSelected } = this.state;
         const { toStationSelected } = this.state;
+        const { directionSelected } = this.state;
 
         //console.debug(this.state.routes);
         let contents = this.state.loading
-            ? <p><em>Loading...</em></p>
+            ? <div><em>Loading...</em></div>
             : MetraSchedule.renderForecastsTable(this.state.routes);
 
         return <div >
             <h1>Metra Scheduled Train Routes</h1>
-            <p>
+            <div>
                 <Label>Direction: </Label>
-                <ToggleButtonGroup style={divStyle} type="radio" name="options" defaultValue={0}>
+                <ToggleButtonGroup style={divStyle} type="radio" name="direction"
+                    value={this.state.directionSelected} onChange={this.direction_OnChanged}>
                     <ToggleButton value={0}>Outbound</ToggleButton>
                     <ToggleButton value={1}>Inbound</ToggleButton>
                 </ToggleButtonGroup> 
-            </p>
-            <p>
+            </div>
+            <div>
                 <Label>From: </Label>
                 <Select  
                     value={fromStationSelected}
                     options={this.state.stations}
                     onChange={this.fromStation_OnSelected}
                 />
-            </p>
-            <p>
+            </div>
+            <div>
                 <Label>To: </Label>
                 <Select
                     value={toStationSelected}
@@ -174,8 +175,8 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                     onChange={this.toStation_OnSelected}
                     
                 />
-            </p>
-            <p>{this.state.currentDateTime}</p>
+            </div>
+            <div>{this.state.currentDateTime}</div>
             {contents}
         </div>;
     }

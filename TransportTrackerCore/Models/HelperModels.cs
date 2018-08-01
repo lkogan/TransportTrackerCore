@@ -111,21 +111,24 @@ namespace TransportTrackerCore.Models
             List<Trip> filteredTrips = (TripsList == null) ? GetTrips() : TripsList;
 
             List<ServicePeriod> filteredServicePeriods = (ServicePeriodList == null) ? GetServicePeriod() : ServicePeriodList;
-             
-            List<StopOnTrip> filteredStopsOnTrips = (StopList == null) ? GetStopTimes() : StopList; //slow (110K entries!). 
 
-            var filteredStopsOnTrips1 = filteredStopsOnTrips.Where(x => x.stop_id.Equals(StationAbbrev)).ToList();
+            //TO DO: speed up - slow (110K entries!). 
+            List<StopOnTrip> stopsOnTrips = (StopList == null) ? GetStopTimes() : StopList;
+
+            //Get trips that pass through the station (IB/OB)
+            var filteredStopsOnTrips1 = stopsOnTrips.Where(x => x.stop_id.Equals(StationAbbrev)).ToList();
 
             var tripsFromStation = filteredStopsOnTrips1.Select(x => x.trip_id).ToList();
 
             tripsFromStation = tripsFromStation.Distinct().ToList();
 
+            //Get routes (MD-W, MD-N, NCS, etc).
             var routes = GetLinesFromStationList(filteredStopsOnTrips1.Select(x => x.trip_id).ToList());
 
 
-
             string serviceID = TripModels.GetServicePeriod();
-              
+
+            //Get trips passing through the station, in the direction desired, along the routes needed (replace with trips?)
             filteredTrips = filteredTrips
                 .Where(
                 (x) =>
@@ -133,32 +136,53 @@ namespace TransportTrackerCore.Models
                 && (x.direction_id.Equals((int)direction))
                 && (routes.Any(b => x.route_id.Equals(b)))
                 ).ToList();
-
+            
             var filteredTripIDs = filteredTrips.Select(x => x.trip_id).ToList();
 
-            var filteredStationAbbrevs = filteredStopsOnTrips
-                .Where(
-                (x) =>
-                (filteredTripIDs.Any(b => x.trip_id.Equals(b)))
-                && (!x.stop_id.Equals(StationAbbrev))
-                ).Select(x => x.stop_id).Distinct().ToList();
+            List<string> allStationsRemaining = new List<string>();
+
+            //For each of trips, get stations from the origin station, in the direction specified, and add to list
+            for (int i = 0; i < filteredTripIDs.Count; i++)
+            {
+                string tripID = filteredTripIDs[i];
+
+                var stopsPerTrip = stopsOnTrips.Where(x => x.trip_id.Equals(tripID));
+
+                var myOriginStation = stopsPerTrip.FirstOrDefault(x => x.stop_id.Equals(StationAbbrev));
+
+                if (myOriginStation == null) continue; //Train is passing without stops through the station
+
+                var sequenceID = myOriginStation.stop_sequence;
+
+                IEnumerable<StopOnTrip> stopsOnTrip = new List<StopOnTrip>();
+
+                if (direction.Equals((int)Direction.Inbound))
+                {
+                    stopsOnTrip = stopsPerTrip.Where(x => x.stop_sequence > sequenceID);
+                }
+                else if (direction.Equals((int)Direction.Outbound))
+                {
+                    stopsOnTrip = stopsPerTrip.Where(x => x.stop_sequence > sequenceID);
+                }
+
+                List<string> stationsRemaining = stopsOnTrip.Select(x => x.stop_id).ToList();
+
+                allStationsRemaining.AddRange(stationsRemaining);
+            }
+
+            //Remove duplicates
+            allStationsRemaining = allStationsRemaining.Distinct().ToList();
 
             List<StationObject> result = new List<StationObject>();
 
-            for (int i = 0; i < filteredStationAbbrevs.Count; i++)
+            for (int i = 0; i < allStationsRemaining.Count; i++)
             {
-                result.Add(filteredStations.FirstOrDefault(x => x.value.Equals(filteredStationAbbrevs[i])));
+                result.Add(filteredStations.FirstOrDefault(x => x.value.Equals(allStationsRemaining[i])));
             }
-
+             
             result = result.OrderBy(x => x.label).ToList();
 
-            return result;
-
-            //Remaining:
-            //1) Filter out stop_sequence greater than source station (for inbounds), or less than (for outbounds).
-            //Keep in mind that stop_sequence will be different on each line
-
-            //Speed up
+            return result; 
         }
 
         public class StationObject
