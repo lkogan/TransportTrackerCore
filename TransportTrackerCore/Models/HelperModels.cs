@@ -116,18 +116,16 @@ namespace TransportTrackerCore.Models
 
             var filteredStopsOnTrips1 = filteredStopsOnTrips.Where(x => x.stop_id.Equals(StationAbbrev)).ToList();
 
+            var tripsFromStation = filteredStopsOnTrips1.Select(x => x.trip_id).ToList();
+
+            tripsFromStation = tripsFromStation.Distinct().ToList();
 
             var routes = GetLinesFromStationList(filteredStopsOnTrips1.Select(x => x.trip_id).ToList());
 
 
 
-
             string serviceID = TripModels.GetServicePeriod();
               
-            //Filter out:
-            //// Service ID out of range
-            //// Direction out of range
-            //// Return List of Route_id's and trip'id's
             filteredTrips = filteredTrips
                 .Where(
                 (x) =>
@@ -138,26 +136,29 @@ namespace TransportTrackerCore.Models
 
             var filteredTripIDs = filteredTrips.Select(x => x.trip_id).ToList();
 
-            var filteredStopsOnTrips2 = filteredStopsOnTrips
+            var filteredStationAbbrevs = filteredStopsOnTrips
                 .Where(
                 (x) =>
-                (filteredTripIDs.Any(b => x.trip_id.Equals(b))));
+                (filteredTripIDs.Any(b => x.trip_id.Equals(b)))
+                && (!x.stop_id.Equals(StationAbbrev))
+                ).Select(x => x.stop_id).Distinct().ToList();
+
+            List<StationObject> result = new List<StationObject>();
+
+            for (int i = 0; i < filteredStationAbbrevs.Count; i++)
+            {
+                result.Add(filteredStations.FirstOrDefault(x => x.value.Equals(filteredStationAbbrevs[i])));
+            }
+
+            result = result.OrderBy(x => x.label).ToList();
+
+            return result;
 
             //Remaining:
             //1) Filter out stop_sequence greater than source station (for inbounds), or less than (for outbounds).
             //Keep in mind that stop_sequence will be different on each line
 
-            //2) Get stations remaining, exclude origin station
-
-            //Go back to stop_time list
-            //// Filter out:
-            //// trip_Id's not from list of params
-            //// Stop_sequence greater, or less (depends on direction)
-            //// Return list of stations
-
-
-
-            return filteredStations;
+            //Speed up
         }
 
         public class StationObject

@@ -14,6 +14,7 @@ import Select from 'react-select';
 interface FetchDataScheduleState {
     routes: StopOnTrip[];
     stations: StationObject[];
+    accessibleStations: StationObject[];
     loading: boolean;
     currentDateTime: string;
     fromStationSelected: string;
@@ -56,7 +57,11 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     constructor() {
         super();
          
-        this.state = { routes: [], stations: [], loading: true, currentDateTime: '', fromStationSelected: null, toStationSelected: null}; 
+        this.state = {
+            routes: [], stations: [], accessibleStations: [],
+            loading: true, currentDateTime: '',
+            fromStationSelected: null, toStationSelected: null
+        }; 
           
         //this.loadData();
 
@@ -119,6 +124,10 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
          
         fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=1', {
         })
+        .then(response => response.json() as Promise<StationObject[]>)
+        .then(data => {
+            this.setState({ accessibleStations: data });
+        });
 
 
         console.log(`Option selected:`, fromStationSelected);
@@ -161,8 +170,9 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                 <Label>To: </Label>
                 <Select
                     value={toStationSelected}
+                    options={this.state.accessibleStations}
                     onChange={this.toStation_OnSelected}
-                    options={options}
+                    
                 />
             </p>
             <p>{this.state.currentDateTime}</p>
