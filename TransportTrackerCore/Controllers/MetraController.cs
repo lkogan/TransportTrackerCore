@@ -32,15 +32,15 @@ namespace TransportTrackerCore.Controllers
         }
 
         [HttpGet("GetScheduleData")]
-        public IEnumerable<StopOnTrip> GetScheduleData()
-        {
+        public IEnumerable<StopOnTrip> GetScheduleData(string FromStationAbbrev, string ToStationAbbrev, int Direction)
+        { 
             TripModels _tm = new TripModels();
             
-            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes("CUS", "WESTERNAVE", Direction.Outbound);
+            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes(FromStationAbbrev, ToStationAbbrev, (Direction)Direction);
 
             return schedules;
         }
-
+         
 
         [HttpGet("GetStations")]
         public IEnumerable<StationObject> GetStations()

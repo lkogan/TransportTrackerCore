@@ -122,7 +122,8 @@ namespace TransportTrackerCore.Models
                 .Where(
                 (x) =>
                 ((x.stop_id.Equals(FromStationID))
-                || (x.stop_id.Equals(ToStationID)))
+                //|| (x.stop_id.Equals(ToStationID))
+                )
                 && (matches.Contains(x.trip_id))
                 ).ToList();
 

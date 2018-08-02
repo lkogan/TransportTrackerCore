@@ -1,4 +1,4 @@
-﻿import * as React from 'react';
+﻿import * as React from 'react'; 
 import { RouteComponentProps } from 'react-router';
 import 'isomorphic-fetch';
 import { Button} from 'react-bootstrap';
@@ -9,7 +9,9 @@ import { ToggleButtonGroup } from 'react-bootstrap';
 import { Label } from 'react-bootstrap';
 import { ToggleButton } from 'react-bootstrap';
 import Select from 'react-select';
-
+//import { ReactSwitchProps } from "react-switch";
+import { Component } from "react";
+import Switch from "react-switch";
 
 interface FetchDataScheduleState {
     routes: StopOnTrip[];
@@ -19,7 +21,8 @@ interface FetchDataScheduleState {
     currentDateTime: string;
     fromStationSelected: string;
     toStationSelected: string;
-    directionSelected: string;
+    directionSelected: boolean;
+    checked: boolean;
 }
 
 interface StationObject
@@ -55,7 +58,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.state = {
             routes: [], stations: [], accessibleStations: [],
             loading: true, currentDateTime: '',
-            fromStationSelected: null, toStationSelected: null, directionSelected: '1'
+            fromStationSelected: null, toStationSelected: null, directionSelected: false, checked: true
         }; 
           
         //this.loadData();
@@ -77,9 +80,9 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.loadStations();
 
         //Repeat loading every 30 seconds
-        setInterval(() => {
-            this.loadData();
-        }, 30000);
+        //setInterval(() => {
+        //    this.loadData();
+        //}, 30000);
 
         
         //this.loadData();
@@ -98,12 +101,20 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             //console.log(e);
         }
     }
-
+     
     loadData()
     {
         try
         {  
-            fetch('api/Metra/GetScheduleData')
+            if (this.state.fromStationSelected == null) return;
+            if (this.state.toStationSelected == null) return;
+             
+            console.log(`Station selected:`, this.state.fromStationSelected['value']);
+
+            fetch('api/Metra/GetScheduleData?FromStationAbbrev=' + this.state.fromStationSelected['value']
+                + '&ToStationAbbrev=' + this.state.toStationSelected['value']
+                + '&Direction=' + this.state.directionSelected, {
+            })
                 .then(response => response.json() as Promise<StopOnTrip[]>)
                 .then(data => {
                     this.setState({ routes: data, loading: false, currentDateTime: 'Updated: ' + new Date().toLocaleString() });
@@ -115,7 +126,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     }
      
     fromStation_OnSelected = (fromStationSelected) => {
-        this.setState({ fromStationSelected });
+        this.setState({ fromStationSelected: fromStationSelected});
          
         fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=' + this.state.directionSelected, {
         })
@@ -129,13 +140,19 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     }
 
     toStation_OnSelected = (toStationSelected) => {
-        this.setState({ toStationSelected });
+        this.setState({ toStationSelected: toStationSelected });
         console.log(`Option selected:`, toStationSelected);
+
+        this.loadData();
     }
 
     direction_OnChanged = (directionSelected) => {
-        this.setState({ directionSelected }); 
+        this.setState({ directionSelected: directionSelected}); 
         console.log('Changed direction:' + directionSelected);
+    }
+
+    handleChange(checked) {
+        this.setState({ checked: checked });
     }
 
     public render() {
@@ -155,13 +172,25 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                 <Label>Direction: </Label>
                 <ToggleButtonGroup style={divStyle} type="radio" name="direction"
                     value={this.state.directionSelected} onChange={this.direction_OnChanged}>
-                    <ToggleButton value={0}>Outbound</ToggleButton>
+                    <ToggleButton checked value={0}>Outbound</ToggleButton>
                     <ToggleButton value={1}>Inbound</ToggleButton>
-                </ToggleButtonGroup> 
+                </ToggleButtonGroup>  
+
+                <label htmlFor="normal-switch">
+                    <span>Inbound</span>
+                    <Switch 
+                        onChange={this.handleChange}
+                        checked={this.state.checked}
+                        id="normal-switch"
+                    />
+                    <span>Outbound</span>
+                </label>
+
             </div>
             <div>
                 <Label>From: </Label>
                 <Select  
+                    defaultvalue={this.state.stations[0]}
                     value={fromStationSelected}
                     options={this.state.stations}
                     onChange={this.fromStation_OnSelected}
@@ -170,6 +199,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             <div>
                 <Label>To: </Label>
                 <Select
+                    defaultvalue={this.state.accessibleStations[0]}
                     value={toStationSelected}
                     options={this.state.accessibleStations}
                     onChange={this.toStation_OnSelected}

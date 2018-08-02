@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -30,11 +31,11 @@ namespace TransportTrackerCore.Models
 
             WebResponse resp = req.GetResponse();
             Stream stream = resp.GetResponseStream();
+
             StreamReader sr = new StreamReader(stream);
             string output = sr.ReadToEnd();
 
             return output;
-        }
-
+        } 
     }
 }

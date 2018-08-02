@@ -34,6 +34,7 @@
   "dependencies": {
     "@types/whatwg-fetch": "0.0.33",
     "react-bootstrap": "^0.32.1",
-    "react-select": "^2.0.0"
+    "react-select": "^2.0.0",
+    "react-switch": "^3.0.4"
   }
 }

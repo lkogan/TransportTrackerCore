@@ -180,7 +180,7 @@ namespace TransportTrackerCore.Models
                 result.Add(filteredStations.FirstOrDefault(x => x.value.Equals(allStationsRemaining[i])));
             }
              
-            result = result.OrderBy(x => x.label).ToList();
+            //result = result.OrderBy(x => x.label).ToList();
 
             return result; 
         }
