@@ -51,9 +51,10 @@ namespace TransportTrackerCore.Controllers
         }
 
         [HttpGet("GetAccessibleStations")]
-        public IEnumerable<StationObject> GetAccessibleStations(string StationAbbrev, int Direction)
+        public IEnumerable<StationObject> GetAccessibleStations(string StationAbbrev, bool IsOutbound)
         {
-            List<StationObject> lst = HelperModels.GetLinesFromStation(StationAbbrev, Direction);
+            int direction = (IsOutbound == true) ? 1 : 0;
+            List<StationObject> lst = HelperModels.GetLinesFromStation(StationAbbrev, direction);
 
             return lst;
         }

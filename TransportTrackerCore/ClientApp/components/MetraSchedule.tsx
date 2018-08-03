@@ -21,8 +21,7 @@ interface FetchDataScheduleState {
     currentDateTime: string;
     fromStationSelected: string;
     toStationSelected: string;
-    directionSelected: boolean;
-    checked: boolean;
+    isOutbound: boolean;
 }
 
 interface StationObject
@@ -58,7 +57,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.state = {
             routes: [], stations: [], accessibleStations: [],
             loading: true, currentDateTime: '',
-            fromStationSelected: null, toStationSelected: null, directionSelected: false, checked: true
+            fromStationSelected: null, toStationSelected: null, isOutbound: true
         }; 
           
         //this.loadData();
@@ -113,7 +112,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
 
             fetch('api/Metra/GetScheduleData?FromStationAbbrev=' + this.state.fromStationSelected['value']
                 + '&ToStationAbbrev=' + this.state.toStationSelected['value']
-                + '&Direction=' + this.state.directionSelected, {
+                + '&Direction=' + this.state.isOutbound, {
             })
                 .then(response => response.json() as Promise<StopOnTrip[]>)
                 .then(data => {
@@ -124,11 +123,26 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             //console.log(e);
         }
     }
-     
+
+    direction_OnChanged = (isOutbound) => {
+        this.setState({ isOutbound: isOutbound });
+        console.log('Changed direction:' + isOutbound);
+
+        if (this.state.fromStationSelected == null) return;
+
+        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + this.state.isOutbound, {
+        })
+            .then(response => response.json() as Promise<StationObject[]>)
+            .then(data => {
+                this.setState({ accessibleStations: data });
+            });
+    }
+
     fromStation_OnSelected = (fromStationSelected) => {
         this.setState({ fromStationSelected: fromStationSelected});
-         
-        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + fromStationSelected.value + '&direction=' + this.state.directionSelected, {
+
+        if (this.state.fromStationSelected == null) return;
+        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + this.state.isOutbound, {
         })
         .then(response => response.json() as Promise<StationObject[]>)
         .then(data => {
@@ -146,20 +160,11 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         this.loadData();
     }
 
-    direction_OnChanged = (directionSelected) => {
-        this.setState({ directionSelected: directionSelected}); 
-        console.log('Changed direction:' + directionSelected);
-    }
-
-    handleChange(checked) {
-        this.setState({ checked: checked });
-    }
-
     public render() {
 
         const { fromStationSelected } = this.state;
         const { toStationSelected } = this.state;
-        const { directionSelected } = this.state;
+        const { isOutbound } = this.state;
 
         //console.debug(this.state.routes);
         let contents = this.state.loading
@@ -168,22 +173,19 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
 
         return <div >
             <h1>Metra Scheduled Train Routes</h1>
-            <div>
-                <Label>Direction: </Label>
-                <ToggleButtonGroup style={divStyle} type="radio" name="direction"
-                    value={this.state.directionSelected} onChange={this.direction_OnChanged}>
-                    <ToggleButton checked value={0}>Outbound</ToggleButton>
-                    <ToggleButton value={1}>Inbound</ToggleButton>
-                </ToggleButtonGroup>  
-
+            <div>  
                 <label htmlFor="normal-switch">
-                    <span>Inbound</span>
+                    <span>Inbound       </span>
                     <Switch 
-                        onChange={this.handleChange}
-                        checked={this.state.checked}
+                        onChange={this.direction_OnChanged}
+                        checked={this.state.isOutbound}
+                        uncheckedIcon={false}
+                        offColor="#2633e6"
+                        onColor="#e62633"
+                        checkedIcon={false}
                         id="normal-switch"
                     />
-                    <span>Outbound</span>
+                    <span>       Outbound</span>
                 </label>
 
             </div>
