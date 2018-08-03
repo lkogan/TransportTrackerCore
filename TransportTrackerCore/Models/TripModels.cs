@@ -80,25 +80,25 @@ namespace TransportTrackerCore.Models
 
             return serviceID;
         }
-         
+
         public List<StopOnTrip> GetScheduledTimes(string FromStationID, string ToStationID, Direction direction)
         {
             List<StopOnTrip> stopsList = (h.StopList == null) ? h.GetStopTimes() : h.StopList;
-             
+
             var fromStationList = stopsList.Where(x => x.stop_id.Equals(FromStationID));
 
             var toStationList = stopsList.Where(x => x.stop_id.Equals(ToStationID));
 
             var matches = fromStationList.Select(a => a.trip_id).Intersect(toStationList.Select(b => b.trip_id)).ToList();
-             
+
             List<string> routes = h.GetLinesFromStationList(matches);
-             
+
             //Get Metra routes that are running today, in the direction specified
             //direction ID = 0: inbound; 1: outbound
             string serviceID = GetServicePeriod();
 
             if (string.IsNullOrEmpty(serviceID)) return stopsList;
-             
+
             List<Trip> tripsList = (h.TripsList == null) ? h.GetTrips() : h.TripsList;
 
             //Get all inbound/outbound routes running for a specific day
@@ -111,7 +111,7 @@ namespace TransportTrackerCore.Models
                 ).ToList();
 
             matches = tripsList.Select(x => x.trip_id).ToList();
-             
+
             stopsList = stopsList
                 .Where(
                 (x) =>
@@ -120,6 +120,28 @@ namespace TransportTrackerCore.Models
                 )
                 && (matches.Contains(x.trip_id))
                 ).ToList();
+
+            //Remove routes that already rode
+            for (int i = stopsList.Count - 1; i >= 0; i--)
+            {
+                int hour = int.Parse(stopsList[i].arrival_time.Split(':')[0]);
+                int minute = int.Parse(stopsList[i].arrival_time.Split(':')[1]);
+
+                int currentHour = DateTime.Now.TimeOfDay.Hours;
+                int currentMinute = DateTime.Now.TimeOfDay.Minutes;
+
+                if (hour.CompareTo(currentHour) < 0)
+                {
+                    stopsList.RemoveAt(i);
+                }
+                else if (hour.CompareTo(currentHour) == 0)
+                {
+                    if (minute.CompareTo(currentMinute) < 0)
+                    {
+                        stopsList.RemoveAt(i);
+                    }
+                }
+            }
 
             stopsList = stopsList.OrderBy(x => x.arrival_time).ToList();
 
