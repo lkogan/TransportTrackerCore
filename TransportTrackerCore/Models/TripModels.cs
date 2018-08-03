@@ -83,11 +83,8 @@ namespace TransportTrackerCore.Models
          
         public List<StopOnTrip> GetScheduledTimes(string FromStationID, string ToStationID, Direction direction)
         {
-            List<StopOnTrip> stopsList = new List<StopOnTrip>();
-
-            string stopTimesJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stop_times");
-            stopsList = JsonConvert.DeserializeObject<List<StopOnTrip>>(stopTimesJSON);
-
+            List<StopOnTrip> stopsList = (h.StopList == null) ? h.GetStopTimes() : h.StopList;
+             
             var fromStationList = stopsList.Where(x => x.stop_id.Equals(FromStationID));
 
             var toStationList = stopsList.Where(x => x.stop_id.Equals(ToStationID));
@@ -101,9 +98,8 @@ namespace TransportTrackerCore.Models
             string serviceID = GetServicePeriod();
 
             if (string.IsNullOrEmpty(serviceID)) return stopsList;
-
-            string tripsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/trips");
-            List<Trip> tripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
+             
+            List<Trip> tripsList = (h.TripsList == null) ? h.GetTrips() : h.TripsList;
 
             //Get all inbound/outbound routes running for a specific day
             tripsList = tripsList
@@ -115,9 +111,7 @@ namespace TransportTrackerCore.Models
                 ).ToList();
 
             matches = tripsList.Select(x => x.trip_id).ToList();
-
-
-
+             
             stopsList = stopsList
                 .Where(
                 (x) =>
@@ -132,81 +126,6 @@ namespace TransportTrackerCore.Models
             tripsList = tripsList.Where(x => matches.Contains(x.trip_id)).ToList();
             
             return stopsList;
-        }
-        public List<StopOnTrip> GetScheduledTimesOld(string StationID, Direction direction, List<string> routesFilter)
-        {
-            //direction ID = 0: inbound; 1: outbound
-            string serviceID = GetServicePeriod();
-             
-            List<StopOnTrip> lstTrips = new List<StopOnTrip>();
-
-            if (string.IsNullOrEmpty(serviceID)) return lstTrips;
-             
-            string tripsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/trips");
-            List<Trip> tripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
-             
-            tripsList = tripsList
-                .Where(
-                (x) => 
-                (x.service_id.Equals(serviceID))
-                && (x.direction_id.Equals((int)direction))
-                && (routesFilter.Any(b => x.route_id.Equals(b)))
-                ).ToList();
-
-
-            string alertJSON = j.Get_GTFS_Response(j.METRA_API_URL + "alerts"); 
-            List<AlertData> lstAlerts = JsonConvert.DeserializeObject<List<AlertData>>(alertJSON);
-
-
-            for (int i = 0; i < tripsList.Count; i++)
-            {
-                string stopTimesJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stop_times/" + tripsList[i].trip_id);
-                List<StopOnTrip> stopTimesList = JsonConvert.DeserializeObject<List<StopOnTrip>>(stopTimesJSON);
-                 
-                StopOnTrip stopTime = stopTimesList.FirstOrDefault(x => x.stop_id.Equals(StationID));
-
-                if (stopTime == null) return lstTrips;
-
-                AlertData alert = null;
-
-                foreach (AlertData a in lstAlerts)
-                {
-                    if (a.alert.informed_entity[0].trip != null)
-                    {
-                        var trip = a.alert.informed_entity[0].trip;
-
-                        if (trip.trip_id.Equals(tripsList[i].trip_id))
-                        {
-                            alert = a;
-                        }
-                    }
-                }
-                
-                if (alert != null)
-                {
-                    Console.WriteLine("Test");
-                }
-
-                //Need to solve problem with 24 hours (midnight), 25 hours (1am), etc. 
-                if (
-                    (!stopTime.arrival_time.Substring(0, 2).Equals("24"))
-                    && (!stopTime.arrival_time.Substring(0, 2).Equals("25"))
-                    && (!stopTime.arrival_time.Substring(0, 2).Equals("26"))
-                    )
-                {
-                    DateTime arrivalTime = DateTime.Parse(stopTime.arrival_time);
-                    DateTime timeNow = DateTime.Now;
-
-                    if (arrivalTime >= timeNow)
-                    {
-                        lstTrips.Add(stopTime);
-                    }
-                }
-            }
-
-            lstTrips = lstTrips.OrderBy(x => x.arrival_time).ToList();
-
-            return lstTrips;
         }
 
         public static object GetPropValue(object src, string propName)

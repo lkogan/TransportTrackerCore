@@ -104,7 +104,7 @@ namespace TransportTrackerCore.Models
             return routes;
         }
 
-        public static List<StationObject> GetLinesFromStation(string StationAbbrev, int direction)
+        public static List<StationObject> GetLinesFromStation(string StationAbbrev, Direction direction)
         {
             List<StationObject> filteredStations = (StationsList == null) ? GetStations() : StationsList;
 
@@ -156,11 +156,11 @@ namespace TransportTrackerCore.Models
 
                 IEnumerable<StopOnTrip> stopsOnTrip = new List<StopOnTrip>();
 
-                if (direction.Equals((int)Direction.Inbound))
+                if (direction.Equals(Direction.Inbound))
                 {
                     stopsOnTrip = stopsPerTrip.Where(x => x.stop_sequence > sequenceID);
                 }
-                else if (direction.Equals((int)Direction.Outbound))
+                else if (direction.Equals(Direction.Outbound))
                 {
                     stopsOnTrip = stopsPerTrip.Where(x => x.stop_sequence > sequenceID);
                 }
@@ -180,8 +180,11 @@ namespace TransportTrackerCore.Models
                 result.Add(filteredStations.FirstOrDefault(x => x.value.Equals(allStationsRemaining[i])));
             }
              
-            //result = result.OrderBy(x => x.label).ToList();
-
+            if (routes.Count > 1)
+            {
+                result = result.OrderBy(x => x.label).ToList();
+            }
+            
             return result; 
         }
 

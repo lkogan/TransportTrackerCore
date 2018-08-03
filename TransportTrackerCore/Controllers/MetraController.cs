@@ -31,17 +31,6 @@ namespace TransportTrackerCore.Controllers
             return routes;
         }
 
-        [HttpGet("GetScheduleData")]
-        public IEnumerable<StopOnTrip> GetScheduleData(string FromStationAbbrev, string ToStationAbbrev, int Direction)
-        { 
-            TripModels _tm = new TripModels();
-            
-            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes(FromStationAbbrev, ToStationAbbrev, (Direction)Direction);
-
-            return schedules;
-        }
-         
-
         [HttpGet("GetStations")]
         public IEnumerable<StationObject> GetStations()
         {
@@ -51,13 +40,25 @@ namespace TransportTrackerCore.Controllers
         }
 
         [HttpGet("GetAccessibleStations")]
-        public IEnumerable<StationObject> GetAccessibleStations(string StationAbbrev, bool IsOutbound)
+        public IEnumerable<StationObject> GetAccessibleStations(string StationAbbrev, int IsOutbound)
         {
-            int direction = (IsOutbound == true) ? 1 : 0;
+            Direction direction = (IsOutbound.Equals(1)) ? Direction.Outbound : Direction.Inbound;
+
             List<StationObject> lst = HelperModels.GetLinesFromStation(StationAbbrev, direction);
 
             return lst;
         }
 
+        [HttpGet("GetScheduleData")]
+        public IEnumerable<StopOnTrip> GetScheduleData(string FromStationAbbrev, string ToStationAbbrev, int Direction)
+        {
+            TripModels _tm = new TripModels();
+
+            Direction direction = (Direction)Direction;
+
+            IEnumerable<StopOnTrip> schedules = _tm.GetScheduledTimes(FromStationAbbrev, ToStationAbbrev, direction);
+
+            return schedules;
+        }
     }
 }

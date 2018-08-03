@@ -56,7 +56,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
          
         this.state = {
             routes: [], stations: [], accessibleStations: [],
-            loading: true, currentDateTime: '',
+            loading: false, currentDateTime: '',
             fromStationSelected: null, toStationSelected: null, isOutbound: true
         }; 
           
@@ -103,12 +103,13 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
      
     loadData()
     {
-        try
-        {  
+        try {
             if (this.state.fromStationSelected == null) return;
             if (this.state.toStationSelected == null) return;
-             
+
             console.log(`Station selected:`, this.state.fromStationSelected['value']);
+
+            this.setState({ loading: true });
 
             fetch('api/Metra/GetScheduleData?FromStationAbbrev=' + this.state.fromStationSelected['value']
                 + '&ToStationAbbrev=' + this.state.toStationSelected['value']
@@ -124,13 +125,11 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         }
     }
 
-    direction_OnChanged = (isOutbound) => {
-        this.setState({ isOutbound: isOutbound });
-        console.log('Changed direction:' + isOutbound);
-
+    loadAccessibleStations()
+    {
         if (this.state.fromStationSelected == null) return;
 
-        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + this.state.isOutbound, {
+        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + Number(this.state.isOutbound), {
         })
             .then(response => response.json() as Promise<StationObject[]>)
             .then(data => {
@@ -138,18 +137,28 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             });
     }
 
+    direction_OnChanged = (isOutbound) => {
+        //this.setState({ isOutbound: isOutbound });
+         
+        this.setState(
+            { isOutbound: isOutbound},
+            () => this.loadAccessibleStations()
+        );
+         
+        console.log('Direction is outbound? ' + isOutbound);
+
+        this.loadAccessibleStations();
+    }
+
     fromStation_OnSelected = (fromStationSelected) => {
-        this.setState({ fromStationSelected: fromStationSelected});
+        //this.setState({ fromStationSelected: fromStationSelected});
+        //this.loadAccessibleStations();
 
-        if (this.state.fromStationSelected == null) return;
-        fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + this.state.isOutbound, {
-        })
-        .then(response => response.json() as Promise<StationObject[]>)
-        .then(data => {
-            this.setState({ accessibleStations: data });
-        });
-
-
+        this.setState(
+            { fromStationSelected: fromStationSelected },
+            () => this.loadAccessibleStations()
+        );
+         
         console.log(`Option selected:`, fromStationSelected);
     }
 
