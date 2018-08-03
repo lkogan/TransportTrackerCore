@@ -137,8 +137,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             });
     }
 
-    direction_OnChanged = (isOutbound) => {
-        //this.setState({ isOutbound: isOutbound });
+    direction_OnChanged = (isOutbound) => { 
          
         this.setState(
             { isOutbound: isOutbound},
@@ -151,9 +150,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     }
 
     fromStation_OnSelected = (fromStationSelected) => {
-        //this.setState({ fromStationSelected: fromStationSelected});
-        //this.loadAccessibleStations();
-
+         
         this.setState(
             { fromStationSelected: fromStationSelected },
             () => this.loadAccessibleStations()
@@ -163,10 +160,13 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     }
 
     toStation_OnSelected = (toStationSelected) => {
-        this.setState({ toStationSelected: toStationSelected });
-        console.log(`Option selected:`, toStationSelected);
+         
+        this.setState(
+            { toStationSelected: toStationSelected},
+            () => this.loadData()
+        );
 
-        this.loadData();
+        console.log(`Option selected:`, toStationSelected); 
     }
 
     public render() {
