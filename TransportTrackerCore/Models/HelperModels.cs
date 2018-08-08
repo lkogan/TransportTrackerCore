@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using static TransportTrackerCore.Models.AuxModels;
@@ -18,16 +19,72 @@ namespace TransportTrackerCore.Models
 
         public static List<Trip> TripsList;
 
+        public delegate List<T> GetJSONData<T>();
 
         public static void LoadInitialData()
         { 
-            ServicePeriodList = GetServicePeriod();
+
+            GetJSONData<ServicePeriod> servicePeriodHandler = GetServicePeriod;
+
+            GetJSONData<StopOnTrip> stopTimesHandler = GetStopTimes;
+
+            GetJSONData<StationObject> stationObjectHandler = GetStations;
+
+            GetJSONData<Trip> tripListHandler = GetTrips;
+
+            List<Task> TaskList = new List<Task>();
+            
+            var task1 = GetListAsync(servicePeriodHandler);
+            var task2 = GetListAsync(stopTimesHandler);
+            var task3 = GetListAsync(stationObjectHandler);
+            var task4 = GetListAsync(tripListHandler);
              
+            TaskList.Add(task1);
+            TaskList.Add(task2);
+            TaskList.Add(task3);
+            TaskList.Add(task4);
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+             
+            Task.WaitAll(TaskList.ToArray());
+
+            ServicePeriodList = task1.Result;
+
+            StopList = task2.Result;
+
+            StationsList = task3.Result;
+
+            TripsList = task4.Result;
+
+
+            stopwatch.Stop();
+
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
+
+            StopList = null;
+            StationsList = null;
+            TripsList = null;
+            ServicePeriodList = null;
+
+            stopwatch = Stopwatch.StartNew();
+            ServicePeriodList = GetServicePeriod();
+
             StopList = GetStopTimes();
 
             StationsList = GetStations();
 
             TripsList = GetTrips();
+
+            stopwatch.Stop();
+
+            Console.WriteLine(stopwatch.ElapsedMilliseconds); //Saving 4 - 6 seconds!
+        }
+
+        public static async Task<List<T>> GetListAsync<T>(GetJSONData<T> handler)
+        {
+            GetJSONData<T> lst = await Task.Run(() => handler).ConfigureAwait(false);
+
+            return lst.Invoke();
         }
 
         public static List<ServicePeriod> GetServicePeriod()
@@ -44,9 +101,23 @@ namespace TransportTrackerCore.Models
         {
             if (StopList != null) return StopList;
 
+            //Stopwatch stopwatch = Stopwatch.StartNew();
+
             string stopTimesJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stop_times");
             StopList = JsonConvert.DeserializeObject<List<StopOnTrip>>(stopTimesJSON);
+            //stopwatch.Stop();
 
+            //Console.WriteLine(stopwatch.ElapsedMilliseconds);
+
+            //stopwatch = Stopwatch.StartNew();
+            //var task = j.DeserializeFromStreamCallAsync<StopOnTrip>(j.METRA_API_URL + "schedule/stop_times");
+            //task.Wait(); // Blocks current thread until GetFooAsync task completes
+            //             // For pedagogical use only: in general, don't do this!
+            //var result = task.Result;
+
+            //stopwatch.Stop();
+
+            //Console.WriteLine(stopwatch.ElapsedMilliseconds);
             return StopList;
         }
 
@@ -58,6 +129,12 @@ namespace TransportTrackerCore.Models
             TripsList = JsonConvert.DeserializeObject<List<Trip>>(tripsJSON);
 
             return TripsList;
+        }
+         
+        public static void OnMyAsyncMethodFailed(Task task)
+        {
+            Exception ex = task.Exception;
+            // Deal with exceptions here however you want
         }
 
         public static List<StationObject> GetStations()

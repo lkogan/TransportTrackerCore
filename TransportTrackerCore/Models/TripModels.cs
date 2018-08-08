@@ -9,6 +9,7 @@ using static TransportTrackerCore.Models.AlertModels;
 using static TransportTrackerCore.Models.AuxModels;
 using j = TransportTrackerCore.Models.JSON_Models;
 using h = TransportTrackerCore.Models.HelperModels;
+using System.Collections.Concurrent;
 
 namespace TransportTrackerCore.Models
 {
@@ -82,17 +83,11 @@ namespace TransportTrackerCore.Models
         }
 
         public List<StopOnTrip> GetScheduledTimes(string FromStationID, string ToStationID, Direction direction)
-        {
+        { 
+            //h.GetListAsync().ContinueWith(h.OnMyAsyncMethodFailed, TaskContinuationOptions.OnlyOnFaulted);
+
             List<StopOnTrip> stopsList = (h.StopList == null) ? h.GetStopTimes() : h.StopList;
-
-            var fromStationList = stopsList.Where(x => x.stop_id.Equals(FromStationID));
-
-            var toStationList = stopsList.Where(x => x.stop_id.Equals(ToStationID));
-
-            var matches = fromStationList.Select(a => a.trip_id).Intersect(toStationList.Select(b => b.trip_id)).ToList();
-
-            List<string> routes = h.GetLinesFromStationList(matches);
-
+             
             //Get Metra routes that are running today, in the direction specified
             //direction ID = 0: inbound; 1: outbound
             string serviceID = GetServicePeriod();
@@ -107,10 +102,26 @@ namespace TransportTrackerCore.Models
                 (x) =>
                 (x.service_id.Equals(serviceID))
                 && (x.direction_id.Equals((int)direction))
-                 && (routes.Any(b => x.route_id.Equals(b)))
                 ).ToList();
 
-            matches = tripsList.Select(x => x.trip_id).ToList();
+             
+            var results = new ConcurrentBag<string>();
+
+            Parallel.For(0, tripsList.Count, i =>
+            { 
+                var myroute = tripsList[i];
+
+                var fromFoute = stopsList.FirstOrDefault(x => x.stop_id.Equals(FromStationID) && x.trip_id.Equals(myroute.trip_id));
+
+                var toRoute = stopsList.FirstOrDefault(x => x.stop_id.Equals(ToStationID) && x.trip_id.Equals(myroute.trip_id));
+
+                if ((fromFoute != null) && (toRoute != null))
+                {
+                    results.Add(myroute.trip_id);
+                } 
+            });
+
+            var matches = results.ToList().Distinct().ToList();
 
             stopsList = stopsList
                 .Where(
@@ -121,7 +132,7 @@ namespace TransportTrackerCore.Models
                 && (matches.Contains(x.trip_id))
                 ).ToList();
 
-            //Remove routes that already rode
+            //Remove routes that are already in the past
             for (int i = stopsList.Count - 1; i >= 0; i--)
             {
                 int hour = int.Parse(stopsList[i].arrival_time.Split(':')[0]);
