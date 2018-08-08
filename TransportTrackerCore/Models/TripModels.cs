@@ -64,10 +64,9 @@ namespace TransportTrackerCore.Models
             string serviceID = string.Empty;
 
             List<ServicePeriod> lstRoutes = new List<ServicePeriod>();
+             
+            List<ServicePeriod> servicePeriodList = (h.ServicePeriodList == null) ? h.GetServicePeriodList() : h.ServicePeriodList;
 
-            string servicePeriodJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/calendar");
-            List<ServicePeriod> servicePeriodList = JsonConvert.DeserializeObject<List<ServicePeriod>>(servicePeriodJSON);
- 
             ServicePeriod servicePeriod = servicePeriodList
                 .Where(
                 (x) =>

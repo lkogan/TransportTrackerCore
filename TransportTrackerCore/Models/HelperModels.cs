@@ -22,9 +22,8 @@ namespace TransportTrackerCore.Models
         public delegate List<T> GetJSONData<T>();
 
         public static void LoadInitialData()
-        { 
-
-            GetJSONData<ServicePeriod> servicePeriodHandler = GetServicePeriod;
+        {  
+            GetJSONData<ServicePeriod> servicePeriodHandler = GetServicePeriodList;
 
             GetJSONData<StopOnTrip> stopTimesHandler = GetStopTimes;
 
@@ -43,8 +42,6 @@ namespace TransportTrackerCore.Models
             TaskList.Add(task2);
             TaskList.Add(task3);
             TaskList.Add(task4);
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
              
             Task.WaitAll(TaskList.ToArray());
 
@@ -56,9 +53,7 @@ namespace TransportTrackerCore.Models
 
             TripsList = task4.Result;
 
-
-            stopwatch.Stop();
-
+            /*
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
 
             StopList = null;
@@ -66,7 +61,7 @@ namespace TransportTrackerCore.Models
             TripsList = null;
             ServicePeriodList = null;
 
-            stopwatch = Stopwatch.StartNew();
+            Stopwatch stopwatch = Stopwatch.StartNew();
             ServicePeriodList = GetServicePeriod();
 
             StopList = GetStopTimes();
@@ -78,6 +73,7 @@ namespace TransportTrackerCore.Models
             stopwatch.Stop();
 
             Console.WriteLine(stopwatch.ElapsedMilliseconds); //Saving 4 - 6 seconds!
+            */
         }
 
         public static async Task<List<T>> GetListAsync<T>(GetJSONData<T> handler)
@@ -87,7 +83,7 @@ namespace TransportTrackerCore.Models
             return lst.Invoke();
         }
 
-        public static List<ServicePeriod> GetServicePeriod()
+        public static List<ServicePeriod> GetServicePeriodList()
         {
             if (ServicePeriodList != null) return ServicePeriodList;
 
@@ -155,7 +151,18 @@ namespace TransportTrackerCore.Models
                 {
                     s.stop_name = "Western Ave/18th Place (BNSF)";
                 }
-
+                else if (s.stop_id.Equals("OTC"))
+                {
+                    s.stop_name = "Chicago Ogilvie Train Station";
+                }
+                else if (s.stop_id.Equals("PRAIRCROSS"))
+                {
+                    s.stop_name = "Prairie Crossing (NCS)";
+                }
+                else if (s.stop_id.Equals("PRAIRIEXNG"))
+                {
+                    s.stop_name = "Prairie Crossing (MD-N)";
+                }
                 lst.Add(new StationObject { value = s.stop_id, label = s.stop_name });
             }
 
@@ -187,7 +194,7 @@ namespace TransportTrackerCore.Models
 
             List<Trip> filteredTrips = (TripsList == null) ? GetTrips() : TripsList;
 
-            List<ServicePeriod> filteredServicePeriods = (ServicePeriodList == null) ? GetServicePeriod() : ServicePeriodList;
+            List<ServicePeriod> filteredServicePeriods = (ServicePeriodList == null) ? GetServicePeriodList() : ServicePeriodList;
 
             //TO DO: speed up - slow (110K entries!). 
             List<StopOnTrip> stopsOnTrips = (StopList == null) ? GetStopTimes() : StopList;
@@ -262,6 +269,11 @@ namespace TransportTrackerCore.Models
                 result = result.OrderBy(x => x.label).ToList();
             }
             
+            if (result.Count == 0)
+            {
+                result.Add(new StationObject { value = "NONE", label = "No stations exist in direction specified. Change your direction." });
+            }
+
             return result; 
         }
 

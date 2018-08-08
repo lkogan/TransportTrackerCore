@@ -76,6 +76,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     {
         //fetch('api/Metra/LoadInitialData');
 
+        this.loadCollections();
         this.loadStations();
 
         //Repeat loading every 30 seconds
@@ -85,6 +86,16 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
 
         
         //this.loadData();
+    }
+
+    loadCollections()
+    {
+        try {
+            fetch('api/Metra/LoadInitialData'); 
+            console.log('Collections loaded!')
+        } catch (e) {
+            //console.log(e);
+        }
     }
 
     loadStations()
@@ -129,30 +140,39 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     {
         if (this.state.fromStationSelected == null) return;
 
+        this.setState({ accessibleStations: []});
+
         fetch('api/Metra/GetAccessibleStations?StationAbbrev=' + this.state.fromStationSelected['value'] + '&IsOutbound=' + Number(this.state.isOutbound), {
         })
             .then(response => response.json() as Promise<StationObject[]>)
             .then(data => {
                 this.setState({ accessibleStations: data });
-            });
+            })
+            .then(data => { 
+                if (this.state.accessibleStations.length == 1)
+                {
+                    console.log('Selecting an option');
+                    this.setState({ toStationSelected: this.state.accessibleStations[0]['value']});
+                }
+            }); 
     }
 
     direction_OnChanged = (isOutbound) => { 
          
         this.setState(
-            { isOutbound: isOutbound},
+            { isOutbound: isOutbound, loading: true}, 
             () => this.loadAccessibleStations()
         );
          
         console.log('Direction is outbound? ' + isOutbound);
 
-        this.loadAccessibleStations();
+        //this.loadAccessibleStations();
     }
 
     fromStation_OnSelected = (fromStationSelected) => {
          
         this.setState(
-            { fromStationSelected: fromStationSelected },
+            { fromStationSelected: fromStationSelected, loading: true },
             () => this.loadAccessibleStations()
         );
          
@@ -167,6 +187,13 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         );
 
         console.log(`Option selected:`, toStationSelected); 
+    }
+     
+    arrowRenderer()
+    {
+        return (
+            <span>+</span>
+        );
     }
 
     public render() {
@@ -201,19 +228,21 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
             <div>
                 <Label>From: </Label>
                 <Select  
-                    defaultvalue={this.state.stations[0]}
                     value={fromStationSelected}
                     options={this.state.stations}
                     onChange={this.fromStation_OnSelected}
+                    loading={this.state.loading}
+                    arrowRenderer={this.arrowRenderer}
                 />
             </div>
             <div>
                 <Label>To: </Label>
                 <Select
-                    defaultvalue={this.state.accessibleStations[0]}
                     value={toStationSelected}
                     options={this.state.accessibleStations}
                     onChange={this.toStation_OnSelected}
+                    loading={this.state.loading}
+                    arrowRenderer={this.arrowRenderer}
                     
                 />
             </div>
