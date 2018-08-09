@@ -66,7 +66,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         super();
          
         this.state = {
-            trainArrivals: [], stations: [], accessibleStations: [],
+            route: null, trainArrivals: [], stations: [], accessibleStations: [],
             loading: false, currentDateTime: '',
             fromStationSelected: null, toStationSelected: null, isOutbound: true
         }; 
