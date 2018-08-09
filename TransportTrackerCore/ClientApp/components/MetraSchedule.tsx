@@ -267,10 +267,10 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                     <thead>
                         <tr>
                             <th>Departing Station</th>
-                            <th>Departing At</th>
                             <th>Arriving Station</th>
+                            <th>Departing At</th>                           
                             <th>Arriving At</th>
-                            <th>Alert</th>
+                            <th>Status</th>
                             <th>TripID</th>
                         </tr>
                     </thead>
@@ -278,9 +278,9 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                             {trainArrivals.map((tr, index) => 
                             <tr key={index}>
                                 <td>{tr.origin_name}</td>
-                                <td>{tr.origin_departure_time}</td>
                                 <td>{tr.dest_name}</td>
-                                <td>{tr.dest_arrival_time}</td>
+                                <td><b>{tr.origin_departure_time}</b></td> 
+                                <td><b>{tr.dest_arrival_time}</b></td>
                                 <td>{tr.alert}</td>
                                 <td><a href={tr.tripURL}>{tr.trip_id}</a></td>
                             </tr>

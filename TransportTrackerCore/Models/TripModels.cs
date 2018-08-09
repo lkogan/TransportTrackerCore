@@ -155,8 +155,7 @@ namespace TransportTrackerCore.Models
                 && (matches.Contains(x.trip_id))
                 ).ToList();
 
-            //Remove routes that are already in the past
-            /*
+            //Remove routes that are already in the past 
             for (int i = stopsList.Count - 1; i >= 0; i--)
             {
                 int hour = int.Parse(stopsList[i].arrival_time.Split(':')[0]);
@@ -177,9 +176,7 @@ namespace TransportTrackerCore.Models
                     }
                 }
             }
-            */
-            //stopsList = stopsList.OrderBy(x => x.arrival_time).ToList();
-
+             
             tripsList = tripsList.Where(x => matches.Contains(x.trip_id)).ToList();
 
             for (int i = 0; i < tripsList.Count; i++)
@@ -190,7 +187,7 @@ namespace TransportTrackerCore.Models
 
                 var tripAlertData = h.AlertsList.Where(x => EmptyIfNull(x.alert.informed_entity[0].trip).Equals(tripID)).FirstOrDefault();
 
-                string alertText = string.Empty;
+                string alertText = "On Time";
                 string alertMemo = string.Empty;
 
                 if (tripAlertData != null)
@@ -202,13 +199,17 @@ namespace TransportTrackerCore.Models
 
                 if (currentStops.Count == 2)
                 {
+                    string origin_departure_time = currentStops[0].departure_time;
+
+                    string dest_arrival_time = currentStops[1].arrival_time;
+
                     TrainArrival tr = new TrainArrival
                     {
-                        origin_departure_time = currentStops[0].departure_time,
+                        origin_departure_time = origin_departure_time.Remove(origin_departure_time.Length - 3),
 
                         origin_name = StationsList.Where(x => x.value.Equals(currentStops[0].stop_id)).First().label,
 
-                        dest_arrival_time = currentStops[1].arrival_time,
+                        dest_arrival_time = dest_arrival_time.Remove(dest_arrival_time.Length - 3),
 
                         dest_name = StationsList.Where(x => x.value.Equals(currentStops[1].stop_id)).First().label,
 

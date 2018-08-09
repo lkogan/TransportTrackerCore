@@ -95,7 +95,13 @@ namespace TransportTrackerCore.Models
             List<AlertData> alertsList = new List<AlertData>();
 
             string alertsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "alerts");
-            alertsList = JsonConvert.DeserializeObject<List<AlertData>>(alertsJSON);
+
+            try
+            {
+                alertsList = JsonConvert.DeserializeObject<List<AlertData>>(alertsJSON);
+            }
+            catch { }
+           
 
             return alertsList;
         }
