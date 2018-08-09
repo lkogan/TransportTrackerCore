@@ -50,7 +50,7 @@ namespace TransportTrackerCore.Models
             public object agency_id { get; set; }
             public string route_id { get; set; }
             public object route_type { get; set; }
-            public Trip trip { get; set; }
+            public string trip { get; set; }
             public string stop_id { get; set; }
         }
 

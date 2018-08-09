@@ -5,11 +5,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using static TransportTrackerCore.Models.AlertModels;
 using static TransportTrackerCore.Models.AuxModels;
 using j = TransportTrackerCore.Models.JSON_Models;
 using h = TransportTrackerCore.Models.HelperModels;
 using System.Collections.Concurrent;
+using static TransportTrackerCore.Models.HelperModels;
 
 namespace TransportTrackerCore.Models
 {
@@ -81,9 +81,14 @@ namespace TransportTrackerCore.Models
             return serviceID;
         }
 
-        public List<StopOnTrip> GetScheduledTimes(string FromStationID, string ToStationID, Direction direction)
+        public static string EmptyIfNull(string value)
+        {
+            return string.IsNullOrEmpty(value) ? string.Empty : value;
+        }
+
+        public List<TrainArrival> GetScheduledTimes(string FromStationID, string ToStationID, Direction direction)
         { 
-            //h.GetListAsync().ContinueWith(h.OnMyAsyncMethodFailed, TaskContinuationOptions.OnlyOnFaulted);
+            List<TrainArrival> lstTrainArrivals = new List<TrainArrival>();
 
             List<StopOnTrip> stopsList = (h.StopList == null) ? h.GetStopTimes() : h.StopList;
              
@@ -91,7 +96,26 @@ namespace TransportTrackerCore.Models
             //direction ID = 0: inbound; 1: outbound
             string serviceID = GetServicePeriod();
 
-            if (string.IsNullOrEmpty(serviceID)) return stopsList;
+            if (string.IsNullOrEmpty(serviceID)) return lstTrainArrivals;
+             
+            var fromStopAlertData = h.AlertsList.Where(x => EmptyIfNull(x.alert.informed_entity[0].stop_id).Equals(FromStationID)).FirstOrDefault();
+
+            if (fromStopAlertData != null)
+            {
+                string alertText = fromStopAlertData.alert.header_text.translation[0].text;
+
+                string alertMemo = fromStopAlertData.alert.description_text.translation[0].text;
+            }
+
+
+            var toStopAlertData = h.AlertsList.Where(x => EmptyIfNull(x.alert.informed_entity[0].stop_id).Equals(ToStationID)).FirstOrDefault();
+
+            if (toStopAlertData != null)
+            {
+                string alertText = toStopAlertData.alert.header_text.translation[0].text;
+
+                string alertMemo = toStopAlertData.alert.description_text.translation[0].text;
+            }
 
             List<Trip> tripsList = (h.TripsList == null) ? h.GetTrips() : h.TripsList;
 
@@ -126,12 +150,13 @@ namespace TransportTrackerCore.Models
                 .Where(
                 (x) =>
                 ((x.stop_id.Equals(FromStationID))
-                //|| (x.stop_id.Equals(ToStationID))
+                || (x.stop_id.Equals(ToStationID))
                 )
                 && (matches.Contains(x.trip_id))
                 ).ToList();
 
             //Remove routes that are already in the past
+            /*
             for (int i = stopsList.Count - 1; i >= 0; i--)
             {
                 int hour = int.Parse(stopsList[i].arrival_time.Split(':')[0]);
@@ -152,12 +177,66 @@ namespace TransportTrackerCore.Models
                     }
                 }
             }
-
-            stopsList = stopsList.OrderBy(x => x.arrival_time).ToList();
+            */
+            //stopsList = stopsList.OrderBy(x => x.arrival_time).ToList();
 
             tripsList = tripsList.Where(x => matches.Contains(x.trip_id)).ToList();
-            
-            return stopsList;
+
+            for (int i = 0; i < tripsList.Count; i++)
+            {
+                string tripID = tripsList[i].trip_id;
+
+                var currentStops = stopsList.Where(x => x.trip_id.Equals(tripsList[i].trip_id)).ToList();
+
+                var tripAlertData = h.AlertsList.Where(x => EmptyIfNull(x.alert.informed_entity[0].trip).Equals(tripID)).FirstOrDefault();
+
+                string alertText = string.Empty;
+                string alertMemo = string.Empty;
+
+                if (tripAlertData != null)
+                {
+                    alertText = tripAlertData.alert.header_text.translation[0].text;
+
+                    alertMemo = tripAlertData.alert.description_text.translation[0].text;
+                }
+
+                if (currentStops.Count == 2)
+                {
+                    TrainArrival tr = new TrainArrival
+                    {
+                        origin_departure_time = currentStops[0].departure_time,
+
+                        origin_name = StationsList.Where(x => x.value.Equals(currentStops[0].stop_id)).First().label,
+
+                        dest_arrival_time = currentStops[1].arrival_time,
+
+                        dest_name = StationsList.Where(x => x.value.Equals(currentStops[1].stop_id)).First().label,
+
+                        arrives_in_min = "",
+
+                        time_on_train = "",
+
+                        late_by_min = "",
+
+                        alert = alertText,
+
+                        route_id = tripsList[i].route_id,
+
+                        trip_id = tripsList[i].trip_id,
+
+                        tripURL = "https://metrarail.com/maps-schedules/train-lines/" + tripsList[i].route_id +
+                    "/trip/" + tripsList[i].trip_id,
+                        
+                        description = "",
+                    };
+
+                    lstTrainArrivals.Add(tr);
+                }
+
+                lstTrainArrivals = lstTrainArrivals.OrderBy(x => x.origin_departure_time).ToList();
+            } 
+
+            return lstTrainArrivals;
         }
 
         public static object GetPropValue(object src, string propName)

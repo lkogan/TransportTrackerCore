@@ -14,7 +14,8 @@ import { Component } from "react";
 import Switch from "react-switch";
 
 interface FetchDataScheduleState {
-    routes: StopOnTrip[];
+    route: Route;
+    trainArrivals: TrainArrival[];
     stations: StationObject[];
     accessibleStations: StationObject[];
     loading: boolean;
@@ -29,22 +30,32 @@ interface StationObject
     value: string;
     label: string;
 }
-
-interface StopOnTrip {
-    trip_id: string;
-    arrival_time: string;
-    departure_time: string;
-    stop_id: string;
-    stop_sequence: number;
-    pickup_type: number;
-    drop_off_type: number;
-    center_boarding: number;
-    south_boarding: number;
-    bikes_allowed: number;
-    notice: number;
-} 
-  
  
+interface Route
+{
+    from_station_alert_text: string;
+    from_station_alert_memo: string;
+    to_station_alert_text: string;
+    to_station_alert_memo: string;
+}
+
+interface TrainArrival
+{
+    origin_departure_time: string; 
+    origin_name: string; 
+    dest_arrival_time: string; 
+    dest_name: string; 
+    arrives_in_min: string; 
+    time_on_train: string; 
+    late_by_min: string; 
+    alert: string;
+    route_id: string;
+    trip_id: string;
+    tripURL: string;
+    description: string;
+};
+
+
 var divStyle = { 
     margin: "20px" 
 };
@@ -55,7 +66,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         super();
          
         this.state = {
-            routes: [], stations: [], accessibleStations: [],
+            trainArrivals: [], stations: [], accessibleStations: [],
             loading: false, currentDateTime: '',
             fromStationSelected: null, toStationSelected: null, isOutbound: true
         }; 
@@ -126,9 +137,9 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                 + '&ToStationAbbrev=' + this.state.toStationSelected['value']
                 + '&Direction=' + this.state.isOutbound, {
             })
-                .then(response => response.json() as Promise<StopOnTrip[]>)
+                .then(response => response.json() as Promise<TrainArrival[]>)
                 .then(data => {
-                    this.setState({ routes: data, loading: false, currentDateTime: 'Updated: ' + new Date().toLocaleString() });
+                    this.setState({ trainArrivals: data, loading: false, currentDateTime: 'Updated: ' + new Date().toLocaleString() });
                 });
              
         } catch (e) {
@@ -205,7 +216,7 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         //console.debug(this.state.routes);
         let contents = this.state.loading
             ? <div><em>Loading...</em></div>
-            : MetraSchedule.renderForecastsTable(this.state.routes);
+            : MetraSchedule.renderForecastsTable(this.state.trainArrivals);
 
         return <div >
             <h1>Metra Scheduled Train Routes</h1>
@@ -251,21 +262,27 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         </div>;
     }
      
-    private static renderForecastsTable(routes: StopOnTrip[]) {
+    private static renderForecastsTable(trainArrivals: TrainArrival[]) {
         return  <table className='table'>
                     <thead>
                         <tr>
-                            <th>DepartingFrom</th>
-                            <th>Departs At</th>
+                            <th>Departing Station</th>
+                            <th>Departing At</th>
+                            <th>Arriving Station</th>
+                            <th>Arriving At</th>
+                            <th>Alert</th>
                             <th>TripID</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {routes.map((route, index) => 
+                            {trainArrivals.map((tr, index) => 
                             <tr key={index}>
-                                <td>{route.stop_id}</td>
-                                <td>{route.arrival_time}</td>
-                                <td>{route.trip_id}</td>
+                                <td>{tr.origin_name}</td>
+                                <td>{tr.origin_departure_time}</td>
+                                <td>{tr.dest_name}</td>
+                                <td>{tr.dest_arrival_time}</td>
+                                <td>{tr.alert}</td>
+                                <td><a href={tr.tripURL}>{tr.trip_id}</a></td>
                             </tr>
                         )}
                     </tbody>

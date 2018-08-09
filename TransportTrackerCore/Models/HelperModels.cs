@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static TransportTrackerCore.Models.AuxModels;
 using j = TransportTrackerCore.Models.JSON_Models;
+using static TransportTrackerCore.Models.AlertModels;
 
 namespace TransportTrackerCore.Models
 {
@@ -19,10 +20,16 @@ namespace TransportTrackerCore.Models
 
         public static List<Trip> TripsList;
 
+        public static List<AlertData> AlertsList;
+
         public delegate List<T> GetJSONData<T>();
 
         public static void LoadInitialData()
-        {  
+        {
+            AlertsList = GetAlerts();
+
+            //AlertData>(test).Items[0]).alert.informed_entity).Items[0]).stop_id
+
             GetJSONData<ServicePeriod> servicePeriodHandler = GetServicePeriodList;
 
             GetJSONData<StopOnTrip> stopTimesHandler = GetStopTimes;
@@ -81,6 +88,16 @@ namespace TransportTrackerCore.Models
             GetJSONData<T> lst = await Task.Run(() => handler).ConfigureAwait(false);
 
             return lst.Invoke();
+        }
+
+        public static List<AlertData> GetAlerts()
+        {
+            List<AlertData> alertsList = new List<AlertData>();
+
+            string alertsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "alerts");
+            alertsList = JsonConvert.DeserializeObject<List<AlertData>>(alertsJSON);
+
+            return alertsList;
         }
 
         public static List<ServicePeriod> GetServicePeriodList()
@@ -283,33 +300,39 @@ namespace TransportTrackerCore.Models
             public string label { get; set; }
         }
 
+        public class Route
+        {
+            public string from_station_alert_text { get; set; }
+            public string from_station_alert_memo { get; set; }
+            public string to_station_alert_text { get; set; }
+            public string to_station_alert_memo { get; set; }
+        }
+
         public class TrainArrival
         {
             public string origin_departure_time { get; set; }
+
             public string origin_name { get; set; }
+
             public string dest_arrival_time { get; set; }
-            public string arrives_in_min { get; set; }
+
             public string dest_name { get; set; }
+
+            public string arrives_in_min { get; set; }
+
+            public string time_on_train { get; set; }
+
+            public string late_by_min { get; set; }
+
+            public string alert { get; set; }
+
+            public string route_id { get; set; }
+
+            public string trip_id { get; set; }
+
             public string description { get; set; }
 
-
-
-
-
-
-            //public string route_id { get; set; }
-            //public string service_id { get; set; }
-            //public string trip_id { get; set; }
-            //public string trip_headsign { get; set; }
-
-            //public int direction_id { get; set; }
-
-
-
-            //public string trip_id { get; set; }
-            //public string arrival_time { get; set; }
-            //public string departure_time { get; set; }
-            //public string stop_id { get; set; } 
+            public string tripURL { get; set; }
         }
     }
 }
