@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using static TransportTrackerCore.Models.AuxModels;
 using j = TransportTrackerCore.Models.JSON_Models;
 using static TransportTrackerCore.Models.AlertModels;
+using static TransportTrackerCore.Models.TripUpdateModels;
+using static TransportTrackerCore.Models.TripPositionModels;
 
 namespace TransportTrackerCore.Models
 {
@@ -22,14 +24,42 @@ namespace TransportTrackerCore.Models
 
         public static List<AlertData> AlertsList;
 
+        public static List<TripUpdateCollection> TripUpdatesList;
+
+        public static List<TripPosition> TripPositionsList;
+
         public delegate List<T> GetJSONData<T>();
+
+        //Gets periodically updated
+        public static void LoadLiveData()
+        {
+            GetJSONData<TripPosition> positionsHandler = GetTripPositions;
+
+            GetJSONData<TripUpdateCollection> tripUpdatesHandler = GetTripUpdates;
+
+            GetJSONData<AlertData> alertsHandler = GetAlerts;
+
+            List<Task> TaskList = new List<Task>();
+
+            var task1 = GetListAsync(positionsHandler);
+            var task2 = GetListAsync(tripUpdatesHandler);
+            var task3 = GetListAsync(alertsHandler);
+
+            TaskList.Add(task1);
+            TaskList.Add(task2);
+            TaskList.Add(task3); 
+
+            Task.WaitAll(TaskList.ToArray());
+
+            TripPositionsList = task1.Result;
+
+            TripUpdatesList = task2.Result;
+
+            AlertsList = task3.Result; 
+        }
 
         public static void LoadInitialData()
         {
-            AlertsList = GetAlerts();
-
-            //AlertData>(test).Items[0]).alert.informed_entity).Items[0]).stop_id
-
             GetJSONData<ServicePeriod> servicePeriodHandler = GetServicePeriodList;
 
             GetJSONData<StopOnTrip> stopTimesHandler = GetStopTimes;
@@ -95,15 +125,19 @@ namespace TransportTrackerCore.Models
             List<AlertData> alertsList = new List<AlertData>();
 
             string alertsJSON = j.Get_GTFS_Response(j.METRA_API_URL + "alerts");
-
-            try
+            
+            alertsList = JsonConvert.DeserializeObject<List<AlertData>>(alertsJSON, new JsonSerializerSettings
             {
-                alertsList = JsonConvert.DeserializeObject<List<AlertData>>(alertsJSON);
-            }
-            catch { }
+                Error = HandleDeserializationError
+            }); 
            
 
-            return alertsList;
+            return alertsList ?? new List<AlertData>();
+        }
+        public static void HandleDeserializationError(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs errorArgs)
+        {
+            var currentError = errorArgs.ErrorContext.Error.Message;
+            errorArgs.ErrorContext.Handled = true;
         }
 
         public static List<ServicePeriod> GetServicePeriodList()
@@ -116,12 +150,33 @@ namespace TransportTrackerCore.Models
             return ServicePeriodList;
         }
 
+        public static List<TripUpdateCollection> GetTripUpdates()
+        {
+            if (TripUpdatesList != null) return TripUpdatesList;
+
+            string tripUpdateJSON = j.Get_GTFS_Response(j.METRA_API_URL + "tripUpdates");
+            TripUpdatesList = JsonConvert.DeserializeObject<List<TripUpdateCollection>>(tripUpdateJSON);
+
+            return TripUpdatesList;
+        }
+
+        
+        public static List<TripPosition> GetTripPositions()
+        {
+            if (TripPositionsList != null) return TripPositionsList;
+
+            string positionJSON = j.Get_GTFS_Response(j.METRA_API_URL + "positions");
+            TripPositionsList = JsonConvert.DeserializeObject<List<TripPosition>>(positionJSON);
+
+            return TripPositionsList;
+        }
+         
         public static List<StopOnTrip> GetStopTimes()
         {
             if (StopList != null) return StopList;
 
             //Stopwatch stopwatch = Stopwatch.StartNew();
-
+             
             string stopTimesJSON = j.Get_GTFS_Response(j.METRA_API_URL + "schedule/stop_times");
             StopList = JsonConvert.DeserializeObject<List<StopOnTrip>>(stopTimesJSON);
             //stopwatch.Stop();

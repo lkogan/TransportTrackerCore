@@ -10,6 +10,7 @@ using j = TransportTrackerCore.Models.JSON_Models;
 using h = TransportTrackerCore.Models.HelperModels;
 using System.Collections.Concurrent;
 using static TransportTrackerCore.Models.HelperModels;
+using static TransportTrackerCore.Models.TripUpdateModels;
 
 namespace TransportTrackerCore.Models
 {
@@ -156,6 +157,7 @@ namespace TransportTrackerCore.Models
                 ).ToList();
 
             //Remove routes that are already in the past 
+            
             for (int i = stopsList.Count - 1; i >= 0; i--)
             {
                 int hour = int.Parse(stopsList[i].arrival_time.Split(':')[0]);
@@ -176,12 +178,32 @@ namespace TransportTrackerCore.Models
                     }
                 }
             }
-             
+            /**/
+
             tripsList = tripsList.Where(x => matches.Contains(x.trip_id)).ToList();
 
             for (int i = 0; i < tripsList.Count; i++)
             {
                 string tripID = tripsList[i].trip_id;
+
+                string Delay = string.Empty;
+
+                TripUpdateCollection tuc = h.TripUpdatesList.Where(x => x.id.Equals(tripID.Replace("_V1_A", "_V1_B"))).FirstOrDefault();
+                if (tuc != null)
+                {
+                    //string lastStationAbbr = tuc.trip_update.stop_time_update[0].stop_id;
+                    //if (lastStationAbbr.Equals("CUS")) continue;
+
+                    int delayInSeconds = tuc.trip_update.stop_time_update[0].arrival.delay;
+                     
+                    TimeSpan ts = new TimeSpan(0, 0, 0);
+
+                    if (delayInSeconds > 0)
+                    {
+                        ts = TimeSpan.FromSeconds(delayInSeconds);
+                        Delay = (int)ts.TotalMinutes + " min late" + Environment.NewLine;
+                    }
+                } 
 
                 var currentStops = stopsList.Where(x => x.trip_id.Equals(tripsList[i].trip_id)).ToList();
 
@@ -195,6 +217,11 @@ namespace TransportTrackerCore.Models
                     alertText = tripAlertData.alert.header_text.translation[0].text;
 
                     alertMemo = tripAlertData.alert.description_text.translation[0].text;
+                }
+
+                if (!string.IsNullOrEmpty(Delay) && alertText.Equals("On Time"))
+                {
+                    alertText = Delay;
                 }
 
                 if (currentStops.Count == 2)

@@ -18,7 +18,15 @@ namespace TransportTrackerCore.Controllers
         [HttpGet("LoadInitialData")]
         public void LoadInitialData()
         {
-            HelperModels.LoadInitialData();
+            //static lists that do not change much (list of stations, stops, etc.)
+            HelperModels.LoadInitialData();  
+        }
+
+        [HttpGet("LoadLiveData")]
+        public void LoadLiveData()
+        { 
+            //real time data (train positions, alerts, etc.)
+            HelperModels.LoadLiveData();
         }
 
         [HttpGet("GetRoutesData")]
@@ -50,11 +58,11 @@ namespace TransportTrackerCore.Controllers
         }
 
         [HttpGet("GetScheduleData")]
-        public IEnumerable<TrainArrival> GetScheduleData(string FromStationAbbrev, string ToStationAbbrev, int Direction)
+        public IEnumerable<TrainArrival> GetScheduleData(string FromStationAbbrev, string ToStationAbbrev, int IsOutbound)
         {
             TripModels _tm = new TripModels();
 
-            Direction direction = (Direction)Direction;
+            Direction direction = (IsOutbound.Equals(1)) ? Direction.Outbound : Direction.Inbound;
 
             IEnumerable<TrainArrival> schedules = _tm.GetScheduledTimes(FromStationAbbrev, ToStationAbbrev, direction);
 

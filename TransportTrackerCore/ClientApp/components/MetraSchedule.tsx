@@ -84,26 +84,23 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
     }
 
     componentDidMount()
-    {
-        //fetch('api/Metra/LoadInitialData');
-
+    { 
         this.loadCollections();
         this.loadStations();
 
-        //Repeat loading every 30 seconds
-        //setInterval(() => {
-        //    this.loadData();
-        //}, 30000);
-
-        
-        //this.loadData();
+        //Repeat loading every 3 minutes
+        setInterval(() => {
+            fetch('api/Metra/LoadLiveData');
+            console.log('Live data is loaded!')
+        }, 180000); 
     }
 
     loadCollections()
     {
         try {
             fetch('api/Metra/LoadInitialData'); 
-            console.log('Collections loaded!')
+            fetch('api/Metra/LoadLiveData');
+            console.log('Static & live data is loaded!')
         } catch (e) {
             //console.log(e);
         }
@@ -133,9 +130,12 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
 
             this.setState({ loading: true });
 
+
+            console.log('Direction is outbound? ' + this.state.isOutbound);
+
             fetch('api/Metra/GetScheduleData?FromStationAbbrev=' + this.state.fromStationSelected['value']
                 + '&ToStationAbbrev=' + this.state.toStationSelected['value']
-                + '&Direction=' + this.state.isOutbound, {
+                + '&IsOutbound=' + Number(this.state.isOutbound), {
             })
                 .then(response => response.json() as Promise<TrainArrival[]>)
                 .then(data => {
