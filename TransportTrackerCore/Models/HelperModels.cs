@@ -241,6 +241,15 @@ namespace TransportTrackerCore.Models
                 {
                     s.stop_name = "Prairie Crossing (MD-N)";
                 }
+                else if (s.stop_id.Equals("FRANKLIN"))
+                {
+                    s.stop_name = "Franklin Park (MD-W)";
+                }
+                else if (s.stop_id.Equals("FRANKLINPK"))
+                {
+                    s.stop_name = "Franklin Park (NCS)";
+                }
+                 
                 lst.Add(new StationObject { value = s.stop_id, label = s.stop_name });
             }
 

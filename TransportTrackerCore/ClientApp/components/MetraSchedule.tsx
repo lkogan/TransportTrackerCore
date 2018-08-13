@@ -200,19 +200,12 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
         console.log(`Option selected:`, toStationSelected); 
     }
      
-    arrowRenderer()
-    {
-        return (
-            <span>+</span>
-        );
-    }
-
     public render() {
 
         const { fromStationSelected } = this.state;
         const { toStationSelected } = this.state;
         const { isOutbound } = this.state;
-
+          
         //console.debug(this.state.routes);
         let contents = this.state.loading
             ? <div><em>Loading...</em></div>
@@ -240,21 +233,20 @@ export class MetraSchedule extends React.Component<RouteComponentProps<{}>, Fetc
                 <Label>From: </Label>
                 <Select  
                     value={fromStationSelected}
+                    selected={fromStationSelected}
                     options={this.state.stations}
                     onChange={this.fromStation_OnSelected}
                     loading={this.state.loading}
-                    arrowRenderer={this.arrowRenderer}
                 />
             </div>
             <div>
                 <Label>To: </Label>
                 <Select
                     value={toStationSelected}
+                    selected={toStationSelected}
                     options={this.state.accessibleStations}
                     onChange={this.toStation_OnSelected}
-                    loading={this.state.loading}
-                    arrowRenderer={this.arrowRenderer}
-                    
+                    loading={this.state.loading}                    
                 />
             </div>
             <div>{this.state.currentDateTime}</div>
